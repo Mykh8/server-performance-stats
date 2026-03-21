@@ -8,9 +8,9 @@
 - Shows total disk usage, how much is free and how much is used, including percentage
 
 ## Usage:
-- Clone the program: `git clone https://github.com/Mykh8/server-performance-stats`
-- Make it executable: `chmod +x server-stats`
-- Run it: `./server-stats`
+- Clone the repository: `git clone https://github.com/Mykh8/server-performance-stats`
+- Make it executable: `chmod +x server-stats.sh`
+- Run it: `./server-stats.sh`
 
 ## Requirements:
 - Linux
