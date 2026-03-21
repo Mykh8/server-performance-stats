@@ -4,13 +4,16 @@ echo "――――――――――――――――――――――――�
 echo "       Server performance stats         "
 echo "――――――――――――――――――――――――――――――――――――――――"
 
-total_cpu_usage() {
+cpu_usage() {
 	snapshot_one=$(grep -i 'cpu' /proc/stat | head -n 1)
 	sleep 1
 	snapshot_two=$(grep -i 'cpu' /proc/stat | head -n 1)
 
 	read -a array_one <<< "$snapshot_one"
 	read -a array_two <<< "$snapshot_two"
+	
+	sum_one=0
+	sum_two=0
 
 	for i in ${array_one[@]:1}; do 
 		sum_one=$(($sum_one + $i));
@@ -28,27 +31,51 @@ total_cpu_usage() {
 
 	total_cpu=$(echo "scale=2; ($final_sum - $final_idle) * 100 / $final_sum" | bc)
 
-	echo "Total CPU usage: $total_cpu%"
+	echo "> Total CPU usage: $total_cpu%"
 }
 
 
-total_mem_usage() {
-	total_mem_kb=$(awk 'NR==1 { print $2 }' /proc/meminfo)
-	total_available_kb=$(awk 'NR==3 { print $2 }' /proc/meminfo)
-	total_used_kb=$(( total_mem_kb - total_available_kb ))
+mem_usage() {
+	snapshot=$(head -n 3 /proc/meminfo)
+	total_mem_kb=$(awk 'NR==1 { print $2 }' <<< $snapshot)
+	total_available_kb=$(awk 'NR==3 { print $2 }' <<< $snapshot)
+	total_used_kb=$((total_mem_kb - total_available_kb))
 
 	total_mem_gb=$(echo "scale=2; ($total_mem_kb / 1024 / 1024)" | bc)
-	total_available_gb=$(echo "scale=2; ($total_available_kb / 1024 / 1024)" | bc)
-	total_used_gb=$(echo "scale=2; ($total_used_kb / 1024 / 1024)" | bc)
+	available_mem_gb=$(echo "scale=2; ($total_available_kb / 1024 / 1024)" | bc)
+	used_mem_gb=$(echo "scale=2; ($total_used_kb / 1024 / 1024)" | bc)
+	
+	available_mem_percentage=$(echo "scale=2; $available_mem_gb / $total_mem_gb * 100" | bc)
+	used_mem_percentage=$(echo "scale=2; $used_mem_gb / $total_mem_gb * 100" | bc)
 
-	echo "Total memory: $total_mem_gb GB"
-	echo "- Free: $total_available_gb GB"
-	echo "- Used: $total_used_gb GB"
+	echo "> Total memory: $total_mem_gb GB"
+	echo "-- Free: $available_mem_gb GB ($available_mem_percentage%)"
+	echo "-- Used: $used_mem_gb GB ($used_mem_percentage%)"
+}
+
+disk_usage() {
+	snapshot=$(df / | awk 'NR==2 { print $2, $3, $4 }')
+	
+	read disk_size_kb used_disk_kb available_disk_kb <<< "$snapshot"
+
+	total_disk_size_gb=$(echo "scale=2; $disk_size_kb / 1024 / 1024" | bc)
+	used_disk_gb=$(echo "scale=2; $used_disk_kb / 1024 / 1024" | bc)	
+	available_disk_gb=$(echo "scale=2; $available_disk_kb / 1024 / 1024" | bc)	
+	
+	available_disk_percentage=$(echo "scale=2; $available_disk_gb / $total_disk_size_gb * 100" | bc)
+	used_disk_percentage=$(echo "scale=2; $used_disk_gb / $total_disk_size_gb * 100" | bc)
+
+	echo "> Total disk size: $total_disk_size_gb GB"
+	echo "-- Free: $available_disk_gb GB ($available_disk_percentage%)"
+	echo "-- Used: $used_disk_gb GB ($used_disk_percentage%)"
 }
 
 main() {
-	total_cpu_usage
-	total_mem_usage
+	cpu_usage
+	echo
+	mem_usage
+	echo	
+	disk_usage
 }
 
 main
