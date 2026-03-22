@@ -6,6 +6,8 @@
 - Shows total CPU usage
 - Shows total memory usage, how much is available and how much is used, including percentage
 - Shows total disk usage, how much is free and how much is used, including percentage
+- Lists top 5 processes by the CPU usage
+- Lists top 5 processes by the memory usage
 
 ## Usage:
 - Clone the repository: `git clone https://github.com/Mykh8/server-performance-stats`
